@@ -4,6 +4,155 @@ import pandas as pd
 st.set_page_config(page_title="Food Macro Calculator", page_icon="🍲", layout="centered")
 
 # -------------------------------------------------------------------
+# THEME / CSS
+# Palette: charcoal (#1F1B16) + cream (#FFF8EC) + mustard (#E8A93B)
+#          + chili red (#C1442E) + sage green (#7C9473)
+# Fonts: Fraunces (headings) + Inter (body) + IBM Plex Mono (numbers)
+# Color legend used consistently: Protein=sage, Carbs=mustard, Fat=chili
+# -------------------------------------------------------------------
+
+CUSTOM_CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+html, body, [class*="css"]  {
+    font-family: 'Inter', sans-serif;
+}
+
+.stApp {
+    background: #1F1B16;
+}
+
+/* ---- Hero header ---- */
+.hero {
+    background: linear-gradient(135deg, #2B2320 0%, #1F1B16 100%);
+    border-radius: 18px;
+    padding: 2.2rem 1.8rem 1.6rem 1.8rem;
+    margin-bottom: 1.6rem;
+    border: 1px solid #3A302A;
+}
+.hero-emojis { font-size: 2.1rem; letter-spacing: 0.3rem; margin-bottom: 0.4rem; }
+.hero h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    color: #FFF8EC;
+    font-size: 2.4rem;
+    margin: 0 0 0.3rem 0;
+    line-height: 1.1;
+}
+.hero p {
+    color: #C9BEB0;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* ---- Spice-dot divider (signature element, also the macro legend) ---- */
+.dot-row { display: flex; align-items: center; gap: 0.5rem; margin: 1.6rem 0 0.8rem 0; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.dot.mustard { background: #E8A93B; }
+.dot.chili { background: #C1442E; }
+.dot.sage { background: #7C9473; }
+.dot-row .label {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    color: #FFF8EC;
+    font-size: 1.3rem;
+    margin-left: 0.3rem;
+}
+
+/* ---- Section cards ---- */
+.section-card {
+    background: #FFF8EC;
+    border-radius: 14px;
+    padding: 1.3rem 1.4rem 0.6rem 1.4rem;
+    margin-bottom: 0.6rem;
+}
+
+/* ---- Streamlit widget restyle ---- */
+.stTextInput input, .stNumberInput input {
+    border-radius: 8px !important;
+    border: 1.5px solid #E3D9C8 !important;
+    font-family: 'IBM Plex Mono', monospace;
+}
+.stMultiSelect [data-baseweb="tag"] {
+    background-color: #E8A93B !important;
+    color: #1F1B16 !important;
+}
+div[data-testid="stButton"] button {
+    background: #C1442E;
+    color: #FFF8EC;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 1.05rem;
+    border-radius: 10px;
+    border: none;
+    padding: 0.6rem 1.4rem;
+    width: 100%;
+    transition: transform 0.12s ease, background 0.12s ease;
+}
+div[data-testid="stButton"] button:hover {
+    background: #A8371F;
+    transform: translateY(-1px);
+    color: #FFF8EC;
+}
+
+/* ---- Result badges ---- */
+.calorie-badge {
+    background: linear-gradient(135deg, #E8A93B 0%, #C1442E 100%);
+    border-radius: 16px;
+    padding: 1.4rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+.calorie-badge .num {
+    font-family: 'Fraunces', serif;
+    font-weight: 700;
+    font-size: 2.6rem;
+    color: #1F1B16;
+    line-height: 1;
+}
+.calorie-badge .lbl {
+    font-family: 'Inter', sans-serif;
+    color: #2B2320;
+    font-size: 0.95rem;
+    margin-top: 0.2rem;
+}
+
+.macro-bar-wrap { margin-bottom: 0.9rem; }
+.macro-bar-label {
+    display: flex; justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    color: #FFF8EC;
+    font-size: 0.92rem;
+    margin-bottom: 0.25rem;
+}
+.macro-bar-track {
+    background: #3A302A;
+    border-radius: 6px;
+    height: 10px;
+    overflow: hidden;
+}
+.macro-bar-fill { height: 100%; border-radius: 6px; }
+
+.section-heading {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    color: #1F1B16;
+    font-size: 1.25rem;
+    margin-bottom: 0.2rem;
+}
+
+.footnote {
+    color: #8A7F71;
+    font-size: 0.85rem;
+    font-family: 'Inter', sans-serif;
+}
+</style>
+"""
+
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
+# -------------------------------------------------------------------
 # INGREDIENT DATABASE
 # Values = (calories, protein_g, carbs_g, fat_g) PER 100 GRAMS
 # (Approximate standard nutrition values)
@@ -58,7 +207,6 @@ OILS = {
 
 def macro_block(title, food_dict, default_qty, key_prefix):
     """Renders a multiselect + per-item grams input, returns list of (name, qty, macros)."""
-    st.subheader(title)
     chosen = st.multiselect(f"Select {title.lower()}", list(food_dict.keys()), key=f"{key_prefix}_select")
     results = []
     for item in chosen:
@@ -96,16 +244,29 @@ def compute_totals(selections):
 # UI
 # -------------------------------------------------------------------
 
-st.title("🍲 Food Macro Calculator")
-st.caption("Enter your dish details below, then hit Calculate to see total macros.")
+st.markdown(
+    """
+    <div class="hero">
+        <div class="hero-emojis">🥕 🌶️ 🧅 🫒 🍅</div>
+        <h1>Food Macro Calculator</h1>
+        <p>Build your dish ingredient by ingredient and get an instant macro breakdown.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 food_name = st.text_input("Food / Dish Name", placeholder="e.g. Aloo Gobi")
 
+st.markdown('<div class="dot-row"><span class="dot sage"></span><span class="label">🥕 Veggies</span></div>', unsafe_allow_html=True)
 veggie_sel = macro_block("Veggies", VEGGIES, default_qty=50, key_prefix="veg")
+
+st.markdown('<div class="dot-row"><span class="dot chili"></span><span class="label">🌶️ Spices</span></div>', unsafe_allow_html=True)
 spice_sel = macro_block("Spices", SPICES, default_qty=2, key_prefix="spice")
+
+st.markdown('<div class="dot-row"><span class="dot mustard"></span><span class="label">🫒 Oil / Fat</span></div>', unsafe_allow_html=True)
 oil_sel = macro_block("Oil / Fat", OILS, default_qty=10, key_prefix="oil")
 
-st.divider()
+st.markdown("<br>", unsafe_allow_html=True)
 
 if st.button("🔢 Calculate Macros", type="primary"):
     all_selected = veggie_sel + spice_sel + oil_sel
@@ -116,27 +277,49 @@ if st.button("🔢 Calculate Macros", type="primary"):
         st.warning("Please select at least one ingredient.")
     else:
         total_cal, total_p, total_c, total_f, rows = compute_totals(all_selected)
+        max_macro = max(total_p, total_c, total_f, 1)  # avoid divide-by-zero
 
-        st.success(f"Macro breakdown for **{food_name}**")
+        st.markdown(
+            f'<div class="dot-row"><span class="label">🍽️ Results for {food_name}</span></div>',
+            unsafe_allow_html=True,
+        )
 
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Calories", f"{total_cal:.0f} kcal")
-        col2.metric("Protein", f"{total_p:.1f} g")
-        col3.metric("Carbs", f"{total_c:.1f} g")
-        col4.metric("Fat", f"{total_f:.1f} g")
+        st.markdown(
+            f"""
+            <div class="calorie-badge">
+                <div class="num">{total_cal:.0f}</div>
+                <div class="lbl">total calories (kcal)</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        st.markdown("#### Ingredient-wise breakdown")
+        macro_data = [
+            ("Protein", total_p, "#7C9473"),
+            ("Carbs", total_c, "#E8A93B"),
+            ("Fat", total_f, "#C1442E"),
+        ]
+        bars_html = ""
+        for label, value, color in macro_data:
+            pct = min(100, (value / max_macro) * 100)
+            bars_html += f"""
+            <div class="macro-bar-wrap">
+                <div class="macro-bar-label"><span>{label}</span><span>{value:.1f} g</span></div>
+                <div class="macro-bar-track">
+                    <div class="macro-bar-fill" style="width:{pct}%; background:{color};"></div>
+                </div>
+            </div>
+            """
+        st.markdown(bars_html, unsafe_allow_html=True)
+
+        st.markdown('<div class="section-card">', unsafe_allow_html=True)
+        st.markdown('<div class="section-heading">📋 Ingredient-wise breakdown</div>', unsafe_allow_html=True)
         df = pd.DataFrame(rows)
         st.dataframe(df, use_container_width=True, hide_index=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("#### Macro split (grams)")
-        chart_df = pd.DataFrame({
-            "Macro": ["Protein", "Carbs", "Fat"],
-            "Grams": [total_p, total_c, total_f]
-        }).set_index("Macro")
-        st.bar_chart(chart_df)
-
-        st.caption(
-            "Note: Values are approximate, based on standard nutrition data per 100g of raw ingredient. "
-            "Actual macros can vary with cooking method, brand, and exact quantities."
+        st.markdown(
+            '<p class="footnote">Note: values are approximate, based on standard nutrition data per '
+            '100g of raw ingredient. Actual macros can vary with cooking method, brand, and exact quantities.</p>',
+            unsafe_allow_html=True,
         )
