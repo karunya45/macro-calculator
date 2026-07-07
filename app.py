@@ -330,14 +330,12 @@ def compute_totals(selections):
 # -------------------------------------------------------------------
 
 st.markdown(
-    """
-    <div class="app-header">
-        <div class="eyebrow">Nutrition Tool</div>
-        <h1>Macro Calculator</h1>
-        <p>Select the ingredients in your dish and get an instant breakdown of calories, protein, carbs, and fat.</p>
-        <hr>
-    </div>
-    """,
+    '<div class="app-header">'
+    '<div class="eyebrow">Nutrition Tool</div>'
+    '<h1>Macro Calculator</h1>'
+    '<p>Select the ingredients in your dish and get an instant breakdown of calories, protein, carbs, and fat.</p>'
+    '<hr>'
+    '</div>',
     unsafe_allow_html=True,
 )
 
@@ -393,14 +391,12 @@ if st.button("Calculate Macros", type="primary"):
         st.markdown(f'<div class="results-header">Results — {display_name}</div>', unsafe_allow_html=True)
 
         st.markdown(
-            f"""
-            <div class="metric-grid">
-                <div class="metric-card calories"><div class="val">{total_cal:.0f}</div><div class="lbl">Calories</div></div>
-                <div class="metric-card protein"><div class="val">{total_p:.1f}g</div><div class="lbl">Protein</div></div>
-                <div class="metric-card carbs"><div class="val">{total_c:.1f}g</div><div class="lbl">Carbs</div></div>
-                <div class="metric-card fat"><div class="val">{total_f:.1f}g</div><div class="lbl">Fat</div></div>
-            </div>
-            """,
+            '<div class="metric-grid">'
+            f'<div class="metric-card calories"><div class="val">{total_cal:.0f}</div><div class="lbl">Calories</div></div>'
+            f'<div class="metric-card protein"><div class="val">{total_p:.1f}g</div><div class="lbl">Protein</div></div>'
+            f'<div class="metric-card carbs"><div class="val">{total_c:.1f}g</div><div class="lbl">Carbs</div></div>'
+            f'<div class="metric-card fat"><div class="val">{total_f:.1f}g</div><div class="lbl">Fat</div></div>'
+            '</div>',
             unsafe_allow_html=True,
         )
 
@@ -412,14 +408,14 @@ if st.button("Calculate Macros", type="primary"):
         bars_html = ""
         for label, value, color in macro_data:
             pct = min(100, (value / max_macro) * 100)
-            bars_html += f"""
-            <div class="macro-bar-wrap">
-                <div class="macro-bar-label"><span>{label}</span><span class="g">{value:.1f} g</span></div>
-                <div class="macro-bar-track">
-                    <div class="macro-bar-fill" style="width:{pct}%; background:{color};"></div>
-                </div>
-            </div>
-            """
+            bars_html += (
+                '<div class="macro-bar-wrap">'
+                f'<div class="macro-bar-label"><span>{label}</span><span class="g">{value:.1f} g</span></div>'
+                '<div class="macro-bar-track">'
+                f'<div class="macro-bar-fill" style="width:{pct}%; background:{color};"></div>'
+                '</div>'
+                '</div>'
+            )
         st.markdown(bars_html, unsafe_allow_html=True)
 
         st.markdown('<div class="data-card">', unsafe_allow_html=True)
