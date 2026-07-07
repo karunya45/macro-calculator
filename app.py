@@ -52,6 +52,8 @@ html, body, [class*="css"]  {
 .dot.mustard { background: #E8A93B; }
 .dot.chili { background: #C1442E; }
 .dot.sage { background: #7C9473; }
+.dot.cream { background: #E3D9C8; }
+.dot.clay { background: #A8724D; }
 .dot-row .label {
     font-family: 'Fraunces', serif;
     font-weight: 600;
@@ -204,6 +206,31 @@ OILS = {
     "Butter": (717, 0.9, 0.1, 81.0),
 }
 
+# Raw / dry weight per 100g (these swell up a lot once cooked/soaked —
+# weigh them dry/raw before cooking for these numbers to be accurate)
+LENTILS = {
+    "Black Chickpeas (Kala Chana)": (364, 19.3, 61.0, 6.0),
+    "White Chickpeas (Kabuli Chana)": (364, 19.3, 61.0, 6.0),
+    "Red Lentils (Masoor Dal)": (352, 24.6, 60.0, 1.1),
+    "Yellow Split Peas (Toor/Arhar Dal)": (343, 22.3, 57.0, 1.5),
+    "Green Gram (Moong Dal)": (347, 24.0, 59.0, 1.2),
+    "Black Gram (Urad Dal)": (341, 25.2, 59.0, 1.6),
+    "Kidney Beans (Rajma)": (333, 23.6, 60.0, 0.8),
+    "Black Beans": (341, 21.6, 62.4, 1.4),
+    "Green Peas (Dry)": (352, 24.6, 63.0, 1.2),
+    "Soybeans": (446, 36.5, 30.2, 19.9),
+}
+
+DAIRY = {
+    "Milk (Full Fat)": (60, 3.2, 4.8, 3.3),
+    "Milk (Toned/Low Fat)": (44, 3.1, 4.9, 1.2),
+    "Curd / Yogurt (Plain)": (60, 3.5, 4.7, 3.3),
+    "Greek Yogurt": (97, 9.0, 3.6, 5.0),
+    "Cheese (Cheddar)": (403, 25.0, 1.3, 33.0),
+    "Cream": (340, 2.1, 2.8, 36.0),
+    "Buttermilk": (25, 1.9, 2.9, 0.6),
+}
+
 
 def macro_block(title, food_dict, default_qty, key_prefix):
     """Renders a multiselect + per-item grams input, returns list of (name, qty, macros)."""
@@ -266,10 +293,16 @@ spice_sel = macro_block("Spices", SPICES, default_qty=2, key_prefix="spice")
 st.markdown('<div class="dot-row"><span class="dot mustard"></span><span class="label">🫒 Oil / Fat</span></div>', unsafe_allow_html=True)
 oil_sel = macro_block("Oil / Fat", OILS, default_qty=10, key_prefix="oil")
 
+st.markdown('<div class="dot-row"><span class="dot clay"></span><span class="label">🫘 Lentils / Legumes</span></div>', unsafe_allow_html=True)
+lentil_sel = macro_block("Lentils / Legumes", LENTILS, default_qty=30, key_prefix="lentil")
+
+st.markdown('<div class="dot-row"><span class="dot cream"></span><span class="label">🥛 Dairy</span></div>', unsafe_allow_html=True)
+dairy_sel = macro_block("Dairy", DAIRY, default_qty=50, key_prefix="dairy")
+
 st.markdown("<br>", unsafe_allow_html=True)
 
 if st.button("🔢 Calculate Macros", type="primary"):
-    all_selected = veggie_sel + spice_sel + oil_sel
+    all_selected = veggie_sel + spice_sel + oil_sel + lentil_sel + dairy_sel
 
     if not food_name:
         st.warning("Please enter a food name.")
