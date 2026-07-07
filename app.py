@@ -1,153 +1,211 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Food Macro Calculator", page_icon="🍲", layout="centered")
+st.set_page_config(page_title="Macro Calculator", page_icon="📊", layout="centered")
 
 # -------------------------------------------------------------------
-# THEME / CSS
-# Palette: charcoal (#1F1B16) + cream (#FFF8EC) + mustard (#E8A93B)
-#          + chili red (#C1442E) + sage green (#7C9473)
-# Fonts: Fraunces (headings) + Inter (body) + IBM Plex Mono (numbers)
-# Color legend used consistently: Protein=sage, Carbs=mustard, Fat=chili
+# THEME / CSS — clean clinical/dashboard style
+# Palette: off-white bg (#F6F7F9) + white cards + navy text (#111827)
+#          + teal accent (#0F766E) for actions
+# Macro colors follow common nutrition-app convention:
+#          Protein = blue (#2563EB), Carbs = amber (#D97706), Fat = red (#DC2626)
+# Fonts: Manrope (headings) + Inter (body/labels) + JetBrains Mono (numbers)
 # -------------------------------------------------------------------
 
 CUSTOM_CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
 
 html, body, [class*="css"]  {
     font-family: 'Inter', sans-serif;
+    color: #111827;
 }
 
 .stApp {
-    background: #1F1B16;
+    background: #F6F7F9;
 }
 
-/* ---- Hero header ---- */
-.hero {
-    background: linear-gradient(135deg, #2B2320 0%, #1F1B16 100%);
-    border-radius: 18px;
-    padding: 2.2rem 1.8rem 1.6rem 1.8rem;
-    margin-bottom: 1.6rem;
-    border: 1px solid #3A302A;
+.block-container {
+    padding-top: 2.2rem;
+    max-width: 720px;
 }
-.hero-emojis { font-size: 2.1rem; letter-spacing: 0.3rem; margin-bottom: 0.4rem; }
-.hero h1 {
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-    color: #FFF8EC;
-    font-size: 2.4rem;
-    margin: 0 0 0.3rem 0;
-    line-height: 1.1;
+
+/* ---- Header ---- */
+.app-header {
+    margin-bottom: 1.8rem;
 }
-.hero p {
-    color: #C9BEB0;
-    font-size: 1rem;
+.app-header .eyebrow {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #0F766E;
+    margin-bottom: 0.4rem;
+}
+.app-header h1 {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 800;
+    color: #111827;
+    font-size: 2rem;
+    margin: 0 0 0.4rem 0;
+    line-height: 1.15;
+}
+.app-header p {
+    color: #6B7280;
+    font-size: 0.98rem;
     margin: 0;
 }
-
-/* ---- Spice-dot divider (signature element, also the macro legend) ---- */
-.dot-row { display: flex; align-items: center; gap: 0.5rem; margin: 1.6rem 0 0.8rem 0; }
-.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-.dot.mustard { background: #E8A93B; }
-.dot.chili { background: #C1442E; }
-.dot.sage { background: #7C9473; }
-.dot.cream { background: #E3D9C8; }
-.dot.clay { background: #A8724D; }
-.dot-row .label {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    color: #FFF8EC;
-    font-size: 1.3rem;
-    margin-left: 0.3rem;
+.app-header hr {
+    border: none;
+    border-top: 1px solid #E5E7EB;
+    margin-top: 1.4rem;
 }
 
-/* ---- Section cards ---- */
-.section-card {
-    background: #FFF8EC;
-    border-radius: 14px;
-    padding: 1.3rem 1.4rem 0.6rem 1.4rem;
-    margin-bottom: 0.6rem;
+/* ---- Section headers ---- */
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 1.7rem 0 0.6rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+.section-title .icon-box {
+    width: 26px; height: 26px;
+    border-radius: 6px;
+    background: #ECFDF5;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem;
+}
+.section-title .text {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 1.02rem;
+    color: #111827;
+}
+.section-title .count {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: #9CA3AF;
 }
 
 /* ---- Streamlit widget restyle ---- */
 .stTextInput input, .stNumberInput input {
     border-radius: 8px !important;
-    border: 1.5px solid #E3D9C8 !important;
-    font-family: 'IBM Plex Mono', monospace;
+    border: 1px solid #D1D5DB !important;
+    font-family: 'Inter', sans-serif;
+    background: #FFFFFF !important;
+}
+.stTextInput input:focus, .stNumberInput input:focus {
+    border-color: #0F766E !important;
+    box-shadow: 0 0 0 1px #0F766E !important;
+}
+.stMultiSelect > div {
+    border-radius: 8px !important;
 }
 .stMultiSelect [data-baseweb="tag"] {
-    background-color: #E8A93B !important;
-    color: #1F1B16 !important;
+    background-color: #0F766E !important;
+    color: #FFFFFF !important;
+    border-radius: 6px !important;
 }
 div[data-testid="stButton"] button {
-    background: #C1442E;
-    color: #FFF8EC;
-    font-family: 'Fraunces', serif;
+    background: #0F766E;
+    color: #FFFFFF;
+    font-family: 'Inter', sans-serif;
     font-weight: 600;
-    font-size: 1.05rem;
-    border-radius: 10px;
+    font-size: 0.98rem;
+    border-radius: 8px;
     border: none;
-    padding: 0.6rem 1.4rem;
+    padding: 0.65rem 1.4rem;
     width: 100%;
-    transition: transform 0.12s ease, background 0.12s ease;
+    transition: background 0.15s ease;
 }
 div[data-testid="stButton"] button:hover {
-    background: #A8371F;
-    transform: translateY(-1px);
-    color: #FFF8EC;
+    background: #0D5F58;
+    color: #FFFFFF;
 }
 
-/* ---- Result badges ---- */
-.calorie-badge {
-    background: linear-gradient(135deg, #E8A93B 0%, #C1442E 100%);
-    border-radius: 16px;
-    padding: 1.4rem;
-    text-align: center;
-    margin-bottom: 1rem;
-}
-.calorie-badge .num {
-    font-family: 'Fraunces', serif;
+/* ---- Result cards ---- */
+.results-header {
+    font-family: 'Manrope', sans-serif;
     font-weight: 700;
-    font-size: 2.6rem;
-    color: #1F1B16;
-    line-height: 1;
-}
-.calorie-badge .lbl {
-    font-family: 'Inter', sans-serif;
-    color: #2B2320;
-    font-size: 0.95rem;
-    margin-top: 0.2rem;
+    font-size: 1.15rem;
+    color: #111827;
+    margin: 1.8rem 0 1rem 0;
 }
 
-.macro-bar-wrap { margin-bottom: 0.9rem; }
+.metric-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.7rem;
+    margin-bottom: 1.3rem;
+}
+.metric-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 0.9rem 0.6rem;
+    text-align: center;
+}
+.metric-card .val {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 1.25rem;
+    color: #111827;
+}
+.metric-card .lbl {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    color: #6B7280;
+    margin-top: 0.15rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.metric-card.calories { border-top: 3px solid #111827; }
+.metric-card.protein { border-top: 3px solid #2563EB; }
+.metric-card.carbs { border-top: 3px solid #D97706; }
+.metric-card.fat { border-top: 3px solid #DC2626; }
+
+.macro-bar-wrap { margin-bottom: 0.8rem; }
 .macro-bar-label {
     display: flex; justify-content: space-between;
-    font-family: 'IBM Plex Mono', monospace;
-    color: #FFF8EC;
-    font-size: 0.92rem;
-    margin-bottom: 0.25rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.85rem;
+    margin-bottom: 0.3rem;
 }
+.macro-bar-label .g { font-family: 'JetBrains Mono', monospace; color: #111827; }
 .macro-bar-track {
-    background: #3A302A;
-    border-radius: 6px;
-    height: 10px;
+    background: #E5E7EB;
+    border-radius: 5px;
+    height: 8px;
     overflow: hidden;
 }
-.macro-bar-fill { height: 100%; border-radius: 6px; }
+.macro-bar-fill { height: 100%; border-radius: 5px; }
 
-.section-heading {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    color: #1F1B16;
-    font-size: 1.25rem;
-    margin-bottom: 0.2rem;
+.data-card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem 0.4rem 1.2rem;
+    margin: 1.2rem 0 0.6rem 0;
+}
+.data-card .heading {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    color: #111827;
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
 }
 
 .footnote {
-    color: #8A7F71;
-    font-size: 0.85rem;
+    color: #9CA3AF;
+    font-size: 0.8rem;
     font-family: 'Inter', sans-serif;
+    margin-top: 0.8rem;
 }
 </style>
 """
@@ -273,35 +331,56 @@ def compute_totals(selections):
 
 st.markdown(
     """
-    <div class="hero">
-        <div class="hero-emojis">🥕 🌶️ 🧅 🫒 🍅</div>
-        <h1>Food Macro Calculator</h1>
-        <p>Build your dish ingredient by ingredient and get an instant macro breakdown.</p>
+    <div class="app-header">
+        <div class="eyebrow">Nutrition Tool</div>
+        <h1>Macro Calculator</h1>
+        <p>Select the ingredients in your dish and get an instant breakdown of calories, protein, carbs, and fat.</p>
+        <hr>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-food_name = st.text_input("Food / Dish Name (optional)", placeholder="e.g. Aloo Gobi — leave blank if you're just checking one ingredient")
+food_name = st.text_input("Dish name (optional)", placeholder="e.g. Aloo Gobi — leave blank if checking a single ingredient")
 
-st.markdown('<div class="dot-row"><span class="dot sage"></span><span class="label">🥕 Veggies</span></div>', unsafe_allow_html=True)
-veggie_sel = macro_block("Veggies", VEGGIES, default_qty=50, key_prefix="veg")
+st.markdown(
+    '<div class="section-title"><span class="icon-box">🥦</span><span class="text">Vegetables</span>'
+    f'<span class="count">{len(VEGGIES)} items</span></div>',
+    unsafe_allow_html=True,
+)
+veggie_sel = macro_block("Vegetables", VEGGIES, default_qty=50, key_prefix="veg")
 
-st.markdown('<div class="dot-row"><span class="dot chili"></span><span class="label">🌶️ Spices</span></div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-title"><span class="icon-box">🌶️</span><span class="text">Spices</span>'
+    f'<span class="count">{len(SPICES)} items</span></div>',
+    unsafe_allow_html=True,
+)
 spice_sel = macro_block("Spices", SPICES, default_qty=2, key_prefix="spice")
 
-st.markdown('<div class="dot-row"><span class="dot mustard"></span><span class="label">🫒 Oil / Fat</span></div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-title"><span class="icon-box">🫒</span><span class="text">Oil / Fat</span>'
+    f'<span class="count">{len(OILS)} items</span></div>',
+    unsafe_allow_html=True,
+)
 oil_sel = macro_block("Oil / Fat", OILS, default_qty=10, key_prefix="oil")
 
-st.markdown('<div class="dot-row"><span class="dot clay"></span><span class="label">🫘 Lentils / Legumes</span></div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-title"><span class="icon-box">🫘</span><span class="text">Lentils / Legumes</span>'
+    f'<span class="count">{len(LENTILS)} items</span></div>',
+    unsafe_allow_html=True,
+)
 lentil_sel = macro_block("Lentils / Legumes", LENTILS, default_qty=30, key_prefix="lentil")
 
-st.markdown('<div class="dot-row"><span class="dot cream"></span><span class="label">🥛 Dairy</span></div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="section-title"><span class="icon-box">🥛</span><span class="text">Dairy</span>'
+    f'<span class="count">{len(DAIRY)} items</span></div>',
+    unsafe_allow_html=True,
+)
 dairy_sel = macro_block("Dairy", DAIRY, default_qty=50, key_prefix="dairy")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-if st.button("🔢 Calculate Macros", type="primary"):
+if st.button("Calculate Macros", type="primary"):
     all_selected = veggie_sel + spice_sel + oil_sel + lentil_sel + dairy_sel
 
     if not all_selected:
@@ -311,32 +390,31 @@ if st.button("🔢 Calculate Macros", type="primary"):
         total_cal, total_p, total_c, total_f, rows = compute_totals(all_selected)
         max_macro = max(total_p, total_c, total_f, 1)  # avoid divide-by-zero
 
-        st.markdown(
-            f'<div class="dot-row"><span class="label">🍽️ Results for {display_name}</span></div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="results-header">Results — {display_name}</div>', unsafe_allow_html=True)
 
         st.markdown(
             f"""
-            <div class="calorie-badge">
-                <div class="num">{total_cal:.0f}</div>
-                <div class="lbl">total calories (kcal)</div>
+            <div class="metric-grid">
+                <div class="metric-card calories"><div class="val">{total_cal:.0f}</div><div class="lbl">Calories</div></div>
+                <div class="metric-card protein"><div class="val">{total_p:.1f}g</div><div class="lbl">Protein</div></div>
+                <div class="metric-card carbs"><div class="val">{total_c:.1f}g</div><div class="lbl">Carbs</div></div>
+                <div class="metric-card fat"><div class="val">{total_f:.1f}g</div><div class="lbl">Fat</div></div>
             </div>
             """,
             unsafe_allow_html=True,
         )
 
         macro_data = [
-            ("Protein", total_p, "#7C9473"),
-            ("Carbs", total_c, "#E8A93B"),
-            ("Fat", total_f, "#C1442E"),
+            ("Protein", total_p, "#2563EB"),
+            ("Carbs", total_c, "#D97706"),
+            ("Fat", total_f, "#DC2626"),
         ]
         bars_html = ""
         for label, value, color in macro_data:
             pct = min(100, (value / max_macro) * 100)
             bars_html += f"""
             <div class="macro-bar-wrap">
-                <div class="macro-bar-label"><span>{label}</span><span>{value:.1f} g</span></div>
+                <div class="macro-bar-label"><span>{label}</span><span class="g">{value:.1f} g</span></div>
                 <div class="macro-bar-track">
                     <div class="macro-bar-fill" style="width:{pct}%; background:{color};"></div>
                 </div>
@@ -344,14 +422,14 @@ if st.button("🔢 Calculate Macros", type="primary"):
             """
         st.markdown(bars_html, unsafe_allow_html=True)
 
-        st.markdown('<div class="section-card">', unsafe_allow_html=True)
-        st.markdown('<div class="section-heading">📋 Ingredient-wise breakdown</div>', unsafe_allow_html=True)
+        st.markdown('<div class="data-card">', unsafe_allow_html=True)
+        st.markdown('<div class="heading">Ingredient breakdown</div>', unsafe_allow_html=True)
         df = pd.DataFrame(rows)
         st.dataframe(df, use_container_width=True, hide_index=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown(
-            '<p class="footnote">Note: values are approximate, based on standard nutrition data per '
+            '<p class="footnote">Values are approximate, based on standard nutrition data per '
             '100g of raw ingredient. Actual macros can vary with cooking method, brand, and exact quantities.</p>',
             unsafe_allow_html=True,
         )
