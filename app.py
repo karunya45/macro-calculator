@@ -282,7 +282,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-food_name = st.text_input("Food / Dish Name", placeholder="e.g. Aloo Gobi")
+food_name = st.text_input("Food / Dish Name (optional)", placeholder="e.g. Aloo Gobi — leave blank if you're just checking one ingredient")
 
 st.markdown('<div class="dot-row"><span class="dot sage"></span><span class="label">🥕 Veggies</span></div>', unsafe_allow_html=True)
 veggie_sel = macro_block("Veggies", VEGGIES, default_qty=50, key_prefix="veg")
@@ -304,16 +304,15 @@ st.markdown("<br>", unsafe_allow_html=True)
 if st.button("🔢 Calculate Macros", type="primary"):
     all_selected = veggie_sel + spice_sel + oil_sel + lentil_sel + dairy_sel
 
-    if not food_name:
-        st.warning("Please enter a food name.")
-    elif not all_selected:
-        st.warning("Please select at least one ingredient.")
+    if not all_selected:
+        st.warning("Please select at least one ingredient (veggie, spice, oil, lentil, or dairy) above.")
     else:
+        display_name = food_name if food_name else "Your Dish"
         total_cal, total_p, total_c, total_f, rows = compute_totals(all_selected)
         max_macro = max(total_p, total_c, total_f, 1)  # avoid divide-by-zero
 
         st.markdown(
-            f'<div class="dot-row"><span class="label">🍽️ Results for {food_name}</span></div>',
+            f'<div class="dot-row"><span class="label">🍽️ Results for {display_name}</span></div>',
             unsafe_allow_html=True,
         )
 
